@@ -1,0 +1,11 @@
+{
+  "name": "sudoku-oled",
+  "version": "1.0.0",
+  "description": "Sudoku com design minimalista OLED",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/cli": "^6.1.2",
+    "@capacitor/core": "^6.1.2"
+  }
+}

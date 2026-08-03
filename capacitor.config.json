@@ -1,0 +1,8 @@
+{
+  "appId": "com.sudokuoled.app",
+  "appName": "Sudoku OLED",
+  "webDir": "www",
+  "android": {
+    "backgroundColor": "#000000"
+  }
+}
