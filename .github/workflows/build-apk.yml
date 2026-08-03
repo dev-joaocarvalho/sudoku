@@ -33,6 +33,11 @@ jobs:
       - name: Adicionar plataforma Android
         run: npx cap add android
 
+      - name: Gerar ícone e splash do app
+        run: |
+          npm install @capacitor/assets --save-dev
+          npx capacitor-assets generate --android
+
       - name: Sincronizar projeto web com o Android
         run: npx cap sync android
 
