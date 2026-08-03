@@ -108,43 +108,44 @@
     position:relative;
   }
 
-  /* ---------- Theme switcher (top carousel) ---------- */
-  .theme-carousel{
-    width:100%;
-    overflow:hidden;
-    touch-action: pan-y;
-    cursor: grab;
-    margin-top: 18px;
+  /* ---------- Theme switcher (color dots) ---------- */
+  .theme-dots{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap: 13px;
+    margin-top: 22px;
     opacity:0;
     animation: riseIn .5s cubic-bezier(.22,1,.36,1) forwards;
   }
-  .theme-carousel:active{ cursor:grabbing; }
-  .theme-track{
-    display:flex;
-    align-items:center;
-    gap: 16px;
-    will-change: transform;
-  }
-  .theme-chip{
-    flex: 0 0 auto;
-    background: none;
-    border: none;
-    padding: 4px 2px;
-    font-family:'Space Grotesk', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-low);
-    white-space: nowrap;
-    opacity: 0.4;
-    transform: scale(0.88);
+  .theme-dot{
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    padding: 0;
+    transform: scale(0.86);
     cursor:pointer;
-    transition: transform .32s cubic-bezier(.22,1,.36,1), opacity .32s ease, color .32s ease;
+    transition: transform .5s cubic-bezier(.34,1.5,.5,1), border-color .3s ease, filter .3s ease;
+    -webkit-tap-highlight-color: transparent;
   }
-  .theme-chip.center{
-    opacity: 1;
-    transform: scale(1.15);
-    color: var(--accent);
+  .theme-dot:active{ transform: scale(0.76); }
+  .theme-dot.center{
+    transform: scale(1.3);
+    border-color: var(--text-hi);
+    filter: drop-shadow(0 3px 8px rgba(var(--accent-rgb), 0.55));
+  }
+  .theme-current-name{
+    text-align:center;
+    margin-top: 12px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
     font-weight: 600;
+    color: var(--text-mid);
+    opacity:0;
+    animation: riseIn .5s cubic-bezier(.22,1,.36,1) .08s forwards;
+    min-height: 14px;
   }
 
   /* ---------- Menu screen ---------- */
@@ -665,33 +666,24 @@
     transform: translateY(14px);
     animation: riseIn .5s cubic-bezier(.22,1,.36,1) .38s forwards;
   }
-  .theme-reveal{
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    pointer-events: none;
-    opacity: 0;
-  }
 </style>
 </head>
 <body>
-<div class="theme-reveal" id="themeReveal"></div>
 <div class="app">
 
   <!-- MENU SCREEN -->
   <div class="screen active" id="menuScreen">
 
-    <div class="theme-carousel" id="themeCarousel">
-      <div class="theme-track" id="themeTrack">
-        <button class="theme-chip" data-theme="" data-name="Amoled">Amoled</button>
-        <button class="theme-chip" data-theme="signalblue" data-name="Signal Blue">Signal Blue</button>
-        <button class="theme-chip" data-theme="butteriris" data-name="Butter Iris">Butter Iris</button>
-        <button class="theme-chip" data-theme="limegraphite" data-name="Lime Spark">Lime Spark</button>
-        <button class="theme-chip" data-theme="dragonfruit" data-name="Dragonfruit">Dragonfruit</button>
-        <button class="theme-chip" data-theme="emeraldchampagne" data-name="Emerald Champagne">Emerald Champagne</button>
-        <button class="theme-chip" data-theme="ultraapricot" data-name="Ultra Violet">Ultra Violet</button>
-      </div>
+    <div class="theme-dots" id="themeDots">
+      <button class="theme-dot center" data-theme="" data-name="Amoled" style="background:#caa24e; box-shadow: inset 0 0 0 5px #000000, 0 1px 4px rgba(0,0,0,0.3)"></button>
+      <button class="theme-dot" data-theme="signalblue" data-name="Signal Blue" style="background:#0057FF; box-shadow: inset 0 0 0 5px #F8F7F4, 0 1px 4px rgba(0,0,0,0.3)"></button>
+      <button class="theme-dot" data-theme="butteriris" data-name="Butter Iris" style="background:#FFF275; box-shadow: inset 0 0 0 5px #3A0CA3, 0 1px 4px rgba(0,0,0,0.3)"></button>
+      <button class="theme-dot" data-theme="limegraphite" data-name="Lime Spark" style="background:#B6FF2E; box-shadow: inset 0 0 0 5px #23262F, 0 1px 4px rgba(0,0,0,0.3)"></button>
+      <button class="theme-dot" data-theme="dragonfruit" data-name="Dragonfruit" style="background:#FF4696; box-shadow: inset 0 0 0 5px #1E1033, 0 1px 4px rgba(0,0,0,0.3)"></button>
+      <button class="theme-dot" data-theme="emeraldchampagne" data-name="Emerald Champagne" style="background:#064E3B; box-shadow: inset 0 0 0 5px #F8E7C9, 0 1px 4px rgba(0,0,0,0.3)"></button>
+      <button class="theme-dot" data-theme="ultraapricot" data-name="Ultra Violet" style="background:#6A00F4; box-shadow: inset 0 0 0 5px #FFD6A5, 0 1px 4px rgba(0,0,0,0.3)"></button>
     </div>
+    <div class="theme-current-name" id="themeCurrentName">Amoled</div>
 
     <div class="menu-top">
       <h1>Sudoku</h1>
@@ -1517,53 +1509,18 @@ updateMenuBests();
     const savedTheme = localStorage.getItem('sudoku-theme');
     if(savedTheme !== null){
       const ti = THEME_ORDER.indexOf(savedTheme);
-      if(ti > 0) goToThemeIndex(ti, false);
+      if(ti > 0) selectTheme(ti, false);
     }
     const savedLang = localStorage.getItem('sudoku-lang');
     if(savedLang && savedLang !== currentLang) applyLanguage(savedLang, false);
   }catch(e){}
 })();
 
-// ---------- Theme carousel (horizontal, live preview) ----------
+// ---------- Theme dots ----------
 const THEME_ORDER = ['','signalblue','butteriris','limegraphite','dragonfruit','emeraldchampagne','ultraapricot'];
-const THEME_BG = {
-  '': '#000000',
-  signalblue: '#F8F7F4',
-  butteriris: '#3A0CA3',
-  limegraphite: '#23262F',
-  dragonfruit: '#1E1033',
-  emeraldchampagne: '#F8E7C9',
-  ultraapricot: '#FFD6A5'
-};
-const themeRevealEl = document.getElementById('themeReveal');
-let revealTimeouts = [];
-
-function revealTheme(i, x, y){
-  revealTimeouts.forEach(clearTimeout);
-  revealTimeouts = [];
-  const bg = THEME_BG[THEME_ORDER[i]];
-  const R = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) + 40;
-  themeRevealEl.style.transition = 'none';
-  themeRevealEl.style.background = bg;
-  themeRevealEl.style.opacity = '1';
-  themeRevealEl.style.clipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
-  void themeRevealEl.offsetWidth;
-  themeRevealEl.style.transition = 'clip-path .5s cubic-bezier(.22,1,.36,1)';
-  themeRevealEl.style.clipPath = 'circle(' + R + 'px at ' + x + 'px ' + y + 'px)';
-  revealTimeouts.push(setTimeout(()=>{ applyTheme(i); }, 240));
-  revealTimeouts.push(setTimeout(()=>{
-    themeRevealEl.style.transition = 'opacity .3s ease';
-    themeRevealEl.style.opacity = '0';
-  }, 520));
-}
-const themeCarousel = document.getElementById('themeCarousel');
-const themeTrack = document.getElementById('themeTrack');
-const chipEls = Array.from(themeTrack.children);
-const CHIP_GAP = 16;
-
+const dotEls = Array.from(document.querySelectorAll('#themeDots .theme-dot'));
+const themeCurrentNameEl = document.getElementById('themeCurrentName');
 let themeIndex = 0;
-let tLastPreview = 0;
-let tDragStartX = 0, tDragDelta = 0, tDragging = false, tPointerId = null;
 
 function applyTheme(i){
   const theme = THEME_ORDER[i];
@@ -1572,105 +1529,24 @@ function applyTheme(i){
   try{ localStorage.setItem('sudoku-theme', theme); }catch(e){}
 }
 
-function chipCenterDistance(index){
-  let dist = 0;
-  for(let i=0;i<index;i++) dist += chipEls[i].offsetWidth + CHIP_GAP;
-  dist += chipEls[index].offsetWidth/2;
-  return dist;
-}
-
-function themeBaseOffset(){
-  return themeCarousel.clientWidth/2 - chipCenterDistance(themeIndex);
-}
-
-function applyThemeTransform(extra, animate){
-  themeTrack.style.transition = animate ? 'transform .34s cubic-bezier(.22,1,.36,1)' : 'none';
-  themeTrack.style.transform = 'translateX(' + (themeBaseOffset() + extra) + 'px)';
-}
-
-function updateThemeVisuals(){
-  chipEls.forEach((c,i)=> c.classList.toggle('center', i===themeIndex));
-}
-
-function goToThemeIndex(i, animate=true){
+function selectTheme(i, animateName=true){
   themeIndex = Math.max(0, Math.min(THEME_ORDER.length-1, i));
-  tLastPreview = themeIndex;
-  updateThemeVisuals();
-  applyThemeTransform(0, animate);
+  dotEls.forEach((d,idx)=> d.classList.toggle('center', idx===themeIndex));
   applyTheme(themeIndex);
+  const name = dotEls[themeIndex].dataset.name;
+  if(animateName) scrambleTo(themeCurrentNameEl, name);
+  else themeCurrentNameEl.textContent = name;
 }
 
-themeCarousel.addEventListener('pointerdown', (e)=>{
-  tDragging = true;
-  tPointerId = e.pointerId;
-  themeCarousel.setPointerCapture(tPointerId);
-  tDragStartX = e.clientX;
-  tDragDelta = 0;
-  themeTrack.style.transition = 'none';
-});
-
-themeCarousel.addEventListener('pointermove', (e)=>{
-  if(!tDragging) return;
-  let d = e.clientX - tDragStartX;
-  if((themeIndex===0 && d>0) || (themeIndex===THEME_ORDER.length-1 && d<0)) d *= 0.35;
-  tDragDelta = d;
-  applyThemeTransform(tDragDelta, false);
-  const previewI = nearestThemeIndex(tDragDelta);
-  if(previewI !== tLastPreview){
-    tLastPreview = previewI;
-    updateThemeVisualsFor(previewI);
-    applyTheme(previewI);
-    buzz(6);
-  }
-});
-
-function nearestThemeIndex(delta){
-  const targetDist = chipCenterDistance(themeIndex) - delta;
-  let bestI = 0, bestDiff = Infinity;
-  for(let i=0;i<THEME_ORDER.length;i++){
-    const d = Math.abs(chipCenterDistance(i) - targetDist);
-    if(d < bestDiff){ bestDiff = d; bestI = i; }
-  }
-  return bestI;
-}
-
-function updateThemeVisualsFor(i){
-  chipEls.forEach((c,idx)=> c.classList.toggle('center', idx===i));
-}
-
-function endThemeDrag(){
-  if(!tDragging) return;
-  tDragging = false;
-  themeIndex = nearestThemeIndex(tDragDelta);
-  tLastPreview = themeIndex;
-  tDragDelta = 0;
-  updateThemeVisuals();
-  applyThemeTransform(0, true);
-  applyTheme(themeIndex);
-}
-
-themeCarousel.addEventListener('pointerup', endThemeDrag);
-themeCarousel.addEventListener('pointercancel', endThemeDrag);
-
-chipEls.forEach((chip, i)=>{
-  chip.addEventListener('click', (e)=>{
-    if(Math.abs(tDragDelta) > 5) return;
+dotEls.forEach((dot, i)=>{
+  dot.addEventListener('click', ()=>{
     if(i === themeIndex) return;
-    const rect = chip.getBoundingClientRect();
-    const x = e.clientX || (rect.left + rect.width/2);
-    const y = e.clientY || (rect.top + rect.height/2);
-    themeIndex = i;
-    tLastPreview = i;
-    updateThemeVisuals();
-    applyThemeTransform(0, true);
     buzz(8);
-    revealTheme(i, x, y);
+    selectTheme(i);
   });
 });
 
-window.addEventListener('resize', ()=> applyThemeTransform(0, false));
-
-goToThemeIndex(0, false);
+selectTheme(0, false);
 
 // ---------- Language switch ----------
 const tagline = document.getElementById('tagline');
