@@ -174,66 +174,70 @@
     color: var(--text-mid);
     margin-bottom: 8px;
   }
-  .carousel{
+  .diff-list{
     width:100%;
-    height: 310px;
     margin-top: 18px;
-    overflow:hidden;
-    touch-action: none;
-    cursor: grab;
-    position:relative;
-    opacity:0;
-    animation: riseIn .6s cubic-bezier(.22,1,.36,1) .1s forwards;
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-    mask-image: linear-gradient(to bottom, transparent, black 8%, black 92%, transparent);
-  }
-  .carousel:active{ cursor: grabbing; }
-  .carousel-track{
-    display:flex;
-    flex-direction: column;
-    align-items:center;
-    gap: 20px;
-    will-change: transform;
-  }
-  .diff-card{
-    flex: 0 0 118px;
-    width: 92%;
     display:flex;
     flex-direction:column;
+    gap: 10px;
+  }
+  .diff-card{
+    display:flex;
     align-items:center;
-    justify-content:center;
-    text-align:center;
-    padding: 18px 12px;
-    border-radius: 26px;
+    justify-content:space-between;
+    width:100%;
+    padding: 14px 20px;
+    border-radius: 20px;
     background: linear-gradient(160deg, var(--surface-b), var(--surface-a));
     border: 1px solid var(--line-minor);
-    transform: scale(0.8);
     opacity: 0.55;
-    filter: blur(1px);
-    transition: transform .38s cubic-bezier(.22,1,.36,1), opacity .38s ease, border-color .38s ease, box-shadow .38s ease, filter .38s ease;
+    transform: scale(0.985);
+    transition: all .5s cubic-bezier(.34,1.3,.5,1);
     cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
   }
+  .diff-card.enter{ animation: diffIn .5s cubic-bezier(.22,1,.36,1) both; }
+  .diff-card.enter:nth-child(1){ animation-delay: .1s; }
+  .diff-card.enter:nth-child(2){ animation-delay: .17s; }
+  .diff-card.enter:nth-child(3){ animation-delay: .24s; }
+  .diff-card.enter:nth-child(4){ animation-delay: .31s; }
   .diff-card.center{
-    transform: scale(1);
+    padding: 26px 22px;
     opacity: 1;
-    filter: blur(0);
+    transform: scale(1);
     border-color: var(--accent-dim);
-    box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.25), 0 20px 40px -18px rgba(var(--accent-rgb),0.5);
+    box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.25), 0 18px 38px -16px rgba(var(--accent-rgb),0.5);
   }
+  .diff-card:not(.center):active{ transform: scale(0.96); }
+  .diff-left{ display:flex; flex-direction:column; gap: 8px; }
   .diff-pips{
     display:flex;
     gap: 5px;
-    margin-bottom: 10px;
   }
   .diff-pips span{
     width: 6px; height: 6px;
     border-radius: 50%;
     background: var(--line-major);
-    transition: background .3s ease;
+    transition: background .3s ease, transform .3s ease;
   }
-  .diff-card.center .diff-pips span.filled{ background: var(--accent); }
-  .diff-name{ font-size: 22px; font-weight: 600; color: var(--text-hi); letter-spacing: -0.01em; }
-  .diff-best-val{ margin-top: 8px; font-family:'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent); font-weight:600; }
+  .diff-card.center .diff-pips span.filled{ background: var(--accent); transform: scale(1.25); }
+  .diff-name{
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-hi);
+    letter-spacing: -0.01em;
+    transition: font-size .5s cubic-bezier(.34,1.3,.5,1), color .3s ease;
+  }
+  .diff-card.center .diff-name{ font-size: 23px; }
+  .diff-best-val{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    font-weight:600;
+    opacity: 0.6;
+    transition: opacity .3s ease, font-size .5s cubic-bezier(.34,1.3,.5,1);
+  }
+  .diff-card.center .diff-best-val{ opacity: 1; font-size: 15px; }
   .diff-best-val:empty::before{ content:'—'; color: var(--text-low); font-weight:400; }
   .play-btn{
     width:100%;
@@ -281,21 +285,12 @@
     box-shadow: inset 0 0 0 1px var(--line-major);
   }
 
-  .scroll-hint{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap: 2px;
-    opacity: 0.5;
-    transition: opacity .3s ease;
-  }
-  .scroll-hint.hidden{ opacity: 0; }
-  .scroll-hint svg{ width:16px; height:16px; }
-  .scroll-hint.top{ margin-bottom: 4px; }
-  .scroll-hint.bottom{ margin-top: 4px; }
-
   @keyframes riseIn{
     to{ opacity:1; transform: translateY(0); }
+  }
+  @keyframes diffIn{
+    from{ opacity:0; transform: translateY(14px) scale(0.985); }
+    to{ opacity:0.55; transform: translateY(0) scale(0.985); }
   }
 
   /* ---------- Game screen ---------- */
@@ -439,6 +434,29 @@
     45%{ transform: scale(1.28); }
     100%{ transform: scale(1); }
   }
+  .cell.sv-static, .cell.sv-static .num{ animation: none; }
+  .cell.win-wave{ animation: winWave .6s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes winWave{
+    0%{ transform: scale(1); }
+    40%{ background: rgba(var(--accent-rgb),0.35); transform: scale(1.07); }
+    100%{ transform: scale(1); }
+  }
+  .cell .ripple{
+    position:absolute;
+    left:50%; top:50%;
+    width:10px; height:10px;
+    margin-left:-5px; margin-top:-5px;
+    border-radius:50%;
+    background: rgba(var(--accent-rgb),0.45);
+    pointer-events:none;
+    animation: rippleOut .45s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes rippleOut{
+    from{ transform: scale(1); opacity:.75; }
+    to{ transform: scale(7); opacity:0; }
+  }
+  .cell .num.out{ animation: numOut .15s ease forwards; }
+  @keyframes numOut{ to{ transform: scale(0.3); opacity:0; } }
   .cell .num{ display:inline-block; }
   .cell .num.pop{ animation: popIn .22s cubic-bezier(.34,1.56,.64,1); }
 
@@ -647,9 +665,17 @@
     transform: translateY(14px);
     animation: riseIn .5s cubic-bezier(.22,1,.36,1) .38s forwards;
   }
+  .theme-reveal{
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0;
+  }
 </style>
 </head>
 <body>
+<div class="theme-reveal" id="themeReveal"></div>
 <div class="app">
 
   <!-- MENU SCREEN -->
@@ -669,40 +695,38 @@
 
     <div class="menu-top">
       <h1>Sudoku</h1>
-      <div class="tagline" id="tagline">Deslize para escolher a dificuldade</div>
+      <div class="tagline" id="tagline">Escolha a dificuldade</div>
     </div>
 
-    <div class="scroll-hint top" id="scrollHintTop">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
-    </div>
-
-    <div class="carousel" id="carousel">
-      <div class="carousel-track" id="carouselTrack">
-        <div class="diff-card" data-d="easy">
-          <div class="diff-pips"><span class="filled"></span><span></span><span></span><span></span></div>
+    <div class="diff-list" id="diffList">
+      <div class="diff-card enter center" data-d="easy">
+        <div class="diff-left">
           <div class="diff-name">Fácil</div>
-          <div class="diff-best-val" data-best="easy"></div>
+          <div class="diff-pips"><span class="filled"></span><span></span><span></span><span></span></div>
         </div>
-        <div class="diff-card" data-d="medium">
-          <div class="diff-pips"><span class="filled"></span><span class="filled"></span><span></span><span></span></div>
-          <div class="diff-name">Médio</div>
-          <div class="diff-best-val" data-best="medium"></div>
-        </div>
-        <div class="diff-card" data-d="hard">
-          <div class="diff-pips"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span></div>
-          <div class="diff-name">Difícil</div>
-          <div class="diff-best-val" data-best="hard"></div>
-        </div>
-        <div class="diff-card" data-d="expert">
-          <div class="diff-pips"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span></div>
-          <div class="diff-name">Especialista</div>
-          <div class="diff-best-val" data-best="expert"></div>
-        </div>
+        <div class="diff-best-val" data-best="easy"></div>
       </div>
-    </div>
-
-    <div class="scroll-hint bottom" id="scrollHintBottom">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+      <div class="diff-card enter" data-d="medium">
+        <div class="diff-left">
+          <div class="diff-name">Médio</div>
+          <div class="diff-pips"><span class="filled"></span><span class="filled"></span><span></span><span></span></div>
+        </div>
+        <div class="diff-best-val" data-best="medium"></div>
+      </div>
+      <div class="diff-card enter" data-d="hard">
+        <div class="diff-left">
+          <div class="diff-name">Difícil</div>
+          <div class="diff-pips"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span></span></div>
+        </div>
+        <div class="diff-best-val" data-best="hard"></div>
+      </div>
+      <div class="diff-card enter" data-d="expert">
+        <div class="diff-left">
+          <div class="diff-name">Especialista</div>
+          <div class="diff-pips"><span class="filled"></span><span class="filled"></span><span class="filled"></span><span class="filled"></span></div>
+        </div>
+        <div class="diff-best-val" data-best="expert"></div>
+      </div>
     </div>
 
     <button class="play-btn" id="playBtn">Jogar</button>
@@ -873,7 +897,7 @@ const DIFFICULTY_LABEL = {
 
 const I18N = {
   pt: {
-    tagline: 'Deslize para escolher a dificuldade',
+    tagline: 'Escolha a dificuldade',
     bestLabel: 'Recorde ·',
     play: 'Jogar',
     newGame: 'Novo jogo',
@@ -886,7 +910,7 @@ const I18N = {
     goToMenu: 'Ir para o menu'
   },
   en: {
-    tagline: 'Swipe to choose the difficulty',
+    tagline: 'Choose the difficulty',
     bestLabel: 'Best ·',
     play: 'Play',
     newGame: 'New game',
@@ -936,6 +960,8 @@ function setText(el, finalText, animate){
 }
 
 // ---------- Game state ----------
+function buzz(pattern){ try{ if(navigator.vibrate) navigator.vibrate(pattern); }catch(e){} }
+let lastHighlightNum = null;
 let solved, given, board, notes, selectedNumber=null, armed=false, selectedCell=null, timerInterval=null, seconds=0;
 let currentDifficulty = 'easy';
 let history = [];
@@ -1081,6 +1107,7 @@ function restart(){
 function renderBoard(justEntered){
   boardEl.innerHTML = '';
   let highlightCount = 0;
+  const animateHL = selectedNumber !== lastHighlightNum;
   for(let row=0; row<9; row++){
     for(let col=0; col<9; col++){
       const val = board[row][col];
@@ -1113,10 +1140,14 @@ function renderBoard(justEntered){
       }
       if(selectedNumber && val===selectedNumber){
         div.classList.add('same-value');
-        div.style.animationDelay = (highlightCount*45)+'ms';
-        const numSpan = div.querySelector('.num');
-        if(numSpan) numSpan.style.animationDelay = (highlightCount*45)+'ms';
-        highlightCount++;
+        if(animateHL){
+          div.style.animationDelay = (highlightCount*45)+'ms';
+          const numSpan = div.querySelector('.num');
+          if(numSpan) numSpan.style.animationDelay = (highlightCount*45)+'ms';
+          highlightCount++;
+        } else {
+          div.classList.add('sv-static');
+        }
       }
       if(selectedCell && selectedCell.row===row && selectedCell.col===col){
         div.classList.add('selected');
@@ -1160,6 +1191,7 @@ function renderBoard(justEntered){
       boardEl.appendChild(div);
     }
   }
+  lastHighlightNum = selectedNumber;
 }
 
 function replaceZero(g,row,col){
@@ -1178,6 +1210,25 @@ function checkWin(){
 
 function placeNumber(row, col, n){
   if(given[row][col]!==0) return;
+
+  // apagar com animação de saída
+  if(n===0 && board[row][col]!==0){
+    const idx = row*9+col;
+    const span = boardEl.children[idx] && boardEl.children[idx].querySelector('.num');
+    history.push({row, col, before: board[row][col]});
+    selectedCell = null;
+    board[row][col] = 0;
+    notes[row][col] = new Set();
+    buzz(10);
+    if(span){
+      span.classList.add('out');
+      setTimeout(()=>{ renderBoard(false); updatePadActive(); saveProgress(); }, 140);
+    } else {
+      renderBoard(false); updatePadActive(); saveProgress();
+    }
+    return;
+  }
+
   history.push({row, col, before: board[row][col]});
   selectedCell = null;
   board[row][col] = n;
@@ -1190,6 +1241,8 @@ function placeNumber(row, col, n){
     const br = row-row%3, bc = col-col%3;
     for(let r=0;r<3;r++) for(let c=0;c<3;c++) notes[br+r][bc+c].delete(n);
   }
+  const causesConflict = n!==0 && !isSafe(replaceZero(board,row,col), row, col, n);
+  buzz(causesConflict ? 35 : 12);
   renderBoard(false);
   updatePadActive();
   if(n!==0){
@@ -1197,6 +1250,10 @@ function placeNumber(row, col, n){
     const cellEl = boardEl.children[cellIdx];
     const span = cellEl.querySelector('.num');
     if(span) span.classList.add('pop');
+    const rip = document.createElement('span');
+    rip.className = 'ripple';
+    cellEl.appendChild(rip);
+    setTimeout(()=> rip.remove(), 500);
   }
   if(n!==0 && checkWin()){
     stopTimer();
@@ -1212,7 +1269,14 @@ function placeNumber(row, col, n){
     clearProgress(currentDifficulty);
     const finishedDifficulty = currentDifficulty;
     const finishedTime = formatTime(seconds);
-    setTimeout(()=> showWinScreen(finishedDifficulty, finishedTime, isNewRecord), 380);
+    buzz([30,50,70]);
+    Array.from(boardEl.children).forEach((c, idx)=>{
+      const r = Math.floor(idx/9), cc = idx%9;
+      c.classList.remove('same-value','sv-static');
+      c.style.animationDelay = ((r+cc)*28)+'ms';
+      c.classList.add('win-wave');
+    });
+    setTimeout(()=> showWinScreen(finishedDifficulty, finishedTime, isNewRecord), 950);
   } else {
     saveProgress();
   }
@@ -1320,6 +1384,7 @@ function updatePadActive(){
 function chooseNumber(n){
   selectedNumber = n;
   armed = true;
+  buzz(8);
   updatePadActive();
   renderBoard(false);
 }
@@ -1403,38 +1468,27 @@ document.addEventListener('keydown', (e)=>{
   }
 });
 
-// ---------- Menu carousel logic (difficulty — vertical) ----------
+// ---------- Menu difficulty list ----------
 const DIFF_ORDER = ['easy','medium','hard','expert'];
-const carousel = document.getElementById('carousel');
-const track = document.getElementById('carouselTrack');
-const cardEls = Array.from(track.children);
-const CARD_H = 118, GAP = 20, STEP = CARD_H + GAP;
-const scrollHintTop = document.getElementById('scrollHintTop');
-const scrollHintBottom = document.getElementById('scrollHintBottom');
+const cardEls = Array.from(document.querySelectorAll('#diffList .diff-card'));
 
 let activeIndex = 0;
-let dragStartY = 0, dragDelta = 0, isDragging = false, pointerId = null;
 
-function baseOffset(){
-  return carousel.clientHeight/2 - CARD_H/2 - activeIndex*STEP;
-}
+// remover classe de entrada após a animação, para as transições normais assumirem
+cardEls.forEach(card=>{
+  card.addEventListener('animationend', ()=> card.classList.remove('enter'), { once:true });
+});
 
-function applyTransform(extra, animate){
-  track.style.transition = animate ? 'transform .38s cubic-bezier(.22,1,.36,1)' : 'none';
-  track.style.transform = 'translateY(' + (baseOffset() + extra) + 'px)';
-}
-
-function updateActiveVisuals(){
-  cardEls.forEach((c,i)=> c.classList.toggle('center', i===activeIndex));
-  scrollHintTop.classList.toggle('hidden', activeIndex===0);
-  scrollHintBottom.classList.toggle('hidden', activeIndex===DIFF_ORDER.length-1);
-}
-
-function goToIndex(i, animate=true){
+function goToIndex(i){
+  if(i === activeIndex) return;
   activeIndex = Math.max(0, Math.min(DIFF_ORDER.length-1, i));
-  updateActiveVisuals();
-  applyTransform(0, animate);
+  cardEls.forEach((c,idx)=> c.classList.toggle('center', idx===activeIndex));
+  buzz(8);
 }
+
+cardEls.forEach((card, i)=>{
+  card.addEventListener('click', ()=> goToIndex(i));
+});
 
 async function startGameFromMenu(){
   menuScreen.classList.remove('active');
@@ -1442,60 +1496,7 @@ async function startGameFromMenu(){
   await newGame(DIFF_ORDER[activeIndex]);
 }
 
-carousel.addEventListener('pointerdown', (e)=>{
-  isDragging = true;
-  pointerId = e.pointerId;
-  carousel.setPointerCapture(pointerId);
-  dragStartY = e.clientY;
-  dragDelta = 0;
-  track.style.transition = 'none';
-});
-
-carousel.addEventListener('pointermove', (e)=>{
-  if(!isDragging) return;
-  dragDelta = e.clientY - dragStartY;
-  applyTransform(dragDelta, false);
-  const previewI = nearestDiffIndex(dragDelta);
-  if(previewI !== activeIndex){
-    updateActiveVisualsFor(previewI);
-  }
-});
-
-function nearestDiffIndex(delta){
-  const raw = activeIndex - delta/STEP;
-  return Math.max(0, Math.min(DIFF_ORDER.length-1, Math.round(raw)));
-}
-
-function updateActiveVisualsFor(i){
-  cardEls.forEach((c,idx)=> c.classList.toggle('center', idx===i));
-  scrollHintTop.classList.toggle('hidden', i===0);
-  scrollHintBottom.classList.toggle('hidden', i===DIFF_ORDER.length-1);
-}
-
-function endDrag(){
-  if(!isDragging) return;
-  isDragging = false;
-  activeIndex = nearestDiffIndex(dragDelta);
-  dragDelta = 0;
-  updateActiveVisuals();
-  applyTransform(0, true);
-}
-
-carousel.addEventListener('pointerup', endDrag);
-carousel.addEventListener('pointercancel', endDrag);
-
-cardEls.forEach((card, i)=>{
-  card.addEventListener('click', ()=>{
-    if(Math.abs(dragDelta) > 5) return;
-    goToIndex(i);
-  });
-});
-
 document.getElementById('playBtn').addEventListener('click', startGameFromMenu);
-
-window.addEventListener('resize', ()=> applyTransform(0, false));
-
-goToIndex(0, false);
 
 function goToMenu(){
   stopTimer();
@@ -1516,12 +1517,43 @@ updateMenuBests();
 
 // ---------- Theme carousel (horizontal, live preview) ----------
 const THEME_ORDER = ['','signalblue','butteriris','limegraphite','dragonfruit','emeraldchampagne','ultraapricot'];
+const THEME_BG = {
+  '': '#000000',
+  signalblue: '#F8F7F4',
+  butteriris: '#3A0CA3',
+  limegraphite: '#23262F',
+  dragonfruit: '#1E1033',
+  emeraldchampagne: '#F8E7C9',
+  ultraapricot: '#FFD6A5'
+};
+const themeRevealEl = document.getElementById('themeReveal');
+let revealTimeouts = [];
+
+function revealTheme(i, x, y){
+  revealTimeouts.forEach(clearTimeout);
+  revealTimeouts = [];
+  const bg = THEME_BG[THEME_ORDER[i]];
+  const R = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y)) + 40;
+  themeRevealEl.style.transition = 'none';
+  themeRevealEl.style.background = bg;
+  themeRevealEl.style.opacity = '1';
+  themeRevealEl.style.clipPath = 'circle(0px at ' + x + 'px ' + y + 'px)';
+  void themeRevealEl.offsetWidth;
+  themeRevealEl.style.transition = 'clip-path .5s cubic-bezier(.22,1,.36,1)';
+  themeRevealEl.style.clipPath = 'circle(' + R + 'px at ' + x + 'px ' + y + 'px)';
+  revealTimeouts.push(setTimeout(()=>{ applyTheme(i); }, 240));
+  revealTimeouts.push(setTimeout(()=>{
+    themeRevealEl.style.transition = 'opacity .3s ease';
+    themeRevealEl.style.opacity = '0';
+  }, 520));
+}
 const themeCarousel = document.getElementById('themeCarousel');
 const themeTrack = document.getElementById('themeTrack');
 const chipEls = Array.from(themeTrack.children);
 const CHIP_GAP = 16;
 
 let themeIndex = 0;
+let tLastPreview = 0;
 let tDragStartX = 0, tDragDelta = 0, tDragging = false, tPointerId = null;
 
 function applyTheme(i){
@@ -1552,6 +1584,7 @@ function updateThemeVisuals(){
 
 function goToThemeIndex(i, animate=true){
   themeIndex = Math.max(0, Math.min(THEME_ORDER.length-1, i));
+  tLastPreview = themeIndex;
   updateThemeVisuals();
   applyThemeTransform(0, animate);
   applyTheme(themeIndex);
@@ -1568,12 +1601,16 @@ themeCarousel.addEventListener('pointerdown', (e)=>{
 
 themeCarousel.addEventListener('pointermove', (e)=>{
   if(!tDragging) return;
-  tDragDelta = e.clientX - tDragStartX;
+  let d = e.clientX - tDragStartX;
+  if((themeIndex===0 && d>0) || (themeIndex===THEME_ORDER.length-1 && d<0)) d *= 0.35;
+  tDragDelta = d;
   applyThemeTransform(tDragDelta, false);
   const previewI = nearestThemeIndex(tDragDelta);
-  if(previewI !== themeIndex){
+  if(previewI !== tLastPreview){
+    tLastPreview = previewI;
     updateThemeVisualsFor(previewI);
     applyTheme(previewI);
+    buzz(6);
   }
 });
 
@@ -1595,6 +1632,7 @@ function endThemeDrag(){
   if(!tDragging) return;
   tDragging = false;
   themeIndex = nearestThemeIndex(tDragDelta);
+  tLastPreview = themeIndex;
   tDragDelta = 0;
   updateThemeVisuals();
   applyThemeTransform(0, true);
@@ -1605,9 +1643,18 @@ themeCarousel.addEventListener('pointerup', endThemeDrag);
 themeCarousel.addEventListener('pointercancel', endThemeDrag);
 
 chipEls.forEach((chip, i)=>{
-  chip.addEventListener('click', ()=>{
+  chip.addEventListener('click', (e)=>{
     if(Math.abs(tDragDelta) > 5) return;
-    goToThemeIndex(i);
+    if(i === themeIndex) return;
+    const rect = chip.getBoundingClientRect();
+    const x = e.clientX || (rect.left + rect.width/2);
+    const y = e.clientY || (rect.top + rect.height/2);
+    themeIndex = i;
+    tLastPreview = i;
+    updateThemeVisuals();
+    applyThemeTransform(0, true);
+    buzz(8);
+    revealTheme(i, x, y);
   });
 });
 
