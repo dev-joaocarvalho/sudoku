@@ -1505,15 +1505,6 @@ updateMenuBests();
 (async function initPersistence(){
   await loadBestTimes();
   updateMenuBests();
-  try{
-    const savedTheme = localStorage.getItem('sudoku-theme');
-    if(savedTheme !== null){
-      const ti = THEME_ORDER.indexOf(savedTheme);
-      if(ti > 0) selectTheme(ti, false);
-    }
-    const savedLang = localStorage.getItem('sudoku-lang');
-    if(savedLang && savedLang !== currentLang) applyLanguage(savedLang, false);
-  }catch(e){}
 })();
 
 // ---------- Theme dots ----------
@@ -1546,7 +1537,17 @@ dotEls.forEach((dot, i)=>{
   });
 });
 
-selectTheme(0, false);
+(function restoreTheme(){
+  let ti = 0;
+  try{
+    const savedTheme = localStorage.getItem('sudoku-theme');
+    if(savedTheme !== null){
+      const idx = THEME_ORDER.indexOf(savedTheme);
+      if(idx >= 0) ti = idx;
+    }
+  }catch(e){}
+  selectTheme(ti, false);
+})();
 
 // ---------- Language switch ----------
 const tagline = document.getElementById('tagline');
@@ -1583,7 +1584,14 @@ langButtons.forEach(btn=>{
   btn.addEventListener('click', ()=> applyLanguage(btn.dataset.lang));
 });
 
-applyLanguage('pt', false);
+(function restoreLanguage(){
+  let lang = 'pt';
+  try{
+    const savedLang = localStorage.getItem('sudoku-lang');
+    if(savedLang === 'en' || savedLang === 'pt') lang = savedLang;
+  }catch(e){}
+  applyLanguage(lang, false);
+})();
 </script>
 </body>
 </html>
