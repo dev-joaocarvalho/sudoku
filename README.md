@@ -1,12 +1,12 @@
-# Sudoku OLED
+# Sudoku
 
-Sudoku com design minimalista e elegante, feito para telas OLED.
+Sudoku com design minimalista e elegante.
 
 ## 📲 Baixar o app (Android)
 
 **[⬇️ Baixar o APK mais recente](../../releases/latest)**
 
-1. Toque no link acima e baixe o arquivo `sudoku-oled.apk`
+1. Toque no link acima e baixe o arquivo `sudoku.apk`
 2. Abra o arquivo no celular
 3. Se aparecer um aviso, permita "instalar apps de fontes desconhecidas" (é
    normal para apps fora da Play Store)
