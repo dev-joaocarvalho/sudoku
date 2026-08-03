@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#000000">
 <title>Sudoku</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1513,10 +1514,44 @@ const dotEls = Array.from(document.querySelectorAll('#themeDots .theme-dot'));
 const themeCurrentNameEl = document.getElementById('themeCurrentName');
 let themeIndex = 0;
 
+// cor de fundo e luminosidade de cada tema (para a barra de status do sistema)
+const THEME_STATUS = {
+  '':                 { bg:'#000000', light:false },
+  signalblue:         { bg:'#F8F7F4', light:true  },
+  butteriris:         { bg:'#3A0CA3', light:false },
+  limegraphite:       { bg:'#23262F', light:false },
+  dragonfruit:        { bg:'#1E1033', light:false },
+  emeraldchampagne:   { bg:'#F8E7C9', light:true  },
+  ultraapricot:       { bg:'#FFD6A5', light:true  }
+};
+
+function syncSystemBars(theme){
+  const info = THEME_STATUS[theme] || THEME_STATUS[''];
+  // navegador / PWA
+  let meta = document.querySelector('meta[name="theme-color"]');
+  if(!meta){
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = info.bg;
+  // app Android (Capacitor)
+  try{
+    const sb = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
+    if(sb){
+      sb.setOverlaysWebView({ overlay: false });
+      sb.setBackgroundColor({ color: info.bg });
+      // 'LIGHT' = texto escuro (fundo claro) | 'DARK' = texto claro (fundo escuro)
+      sb.setStyle({ style: info.light ? 'LIGHT' : 'DARK' });
+    }
+  }catch(e){}
+}
+
 function applyTheme(i){
   const theme = THEME_ORDER[i];
   if(theme) document.body.setAttribute('data-theme', theme);
   else document.body.removeAttribute('data-theme');
+  syncSystemBars(theme);
   try{ localStorage.setItem('sudoku-theme', theme); }catch(e){}
 }
 
@@ -1592,6 +1627,10 @@ langButtons.forEach(btn=>{
   }catch(e){}
   applyLanguage(lang, false);
 })();
+
+// garante que a barra de status pegue o tema mesmo se o Capacitor carregar depois
+window.addEventListener('load', ()=> syncSystemBars(THEME_ORDER[themeIndex]));
+document.addEventListener('resume', ()=> syncSystemBars(THEME_ORDER[themeIndex]));
 </script>
 </body>
 </html>
