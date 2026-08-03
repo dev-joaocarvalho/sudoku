@@ -26,6 +26,3 @@ Sudoku com design minimalista e elegante, feito para telas OLED.
 Também dá pra jogar sem instalar nada: abra o arquivo `www/index.html` em
 qualquer navegador.
 
----
-
-Feito com [Claude](https://claude.com).
