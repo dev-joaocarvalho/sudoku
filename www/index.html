@@ -1513,6 +1513,15 @@ updateMenuBests();
 (async function initPersistence(){
   await loadBestTimes();
   updateMenuBests();
+  try{
+    const savedTheme = localStorage.getItem('sudoku-theme');
+    if(savedTheme !== null){
+      const ti = THEME_ORDER.indexOf(savedTheme);
+      if(ti > 0) goToThemeIndex(ti, false);
+    }
+    const savedLang = localStorage.getItem('sudoku-lang');
+    if(savedLang && savedLang !== currentLang) applyLanguage(savedLang, false);
+  }catch(e){}
 })();
 
 // ---------- Theme carousel (horizontal, live preview) ----------
@@ -1560,6 +1569,7 @@ function applyTheme(i){
   const theme = THEME_ORDER[i];
   if(theme) document.body.setAttribute('data-theme', theme);
   else document.body.removeAttribute('data-theme');
+  try{ localStorage.setItem('sudoku-theme', theme); }catch(e){}
 }
 
 function chipCenterDistance(index){
@@ -1675,6 +1685,7 @@ const langButtons = Array.from(document.getElementById('langSwitch').children);
 
 function applyLanguage(lang, animate=true){
   currentLang = lang;
+  try{ localStorage.setItem('sudoku-lang', lang); }catch(e){}
   const t = I18N[lang];
   document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en';
   setText(tagline, t.tagline, animate);
