@@ -87,10 +87,10 @@
     user-select:none;
   }
   .app{
-    max-width: 440px;
-    margin: 0 auto;
-    height: 100%;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
     overflow: hidden;
   }
   .screen{
@@ -340,6 +340,12 @@
   @keyframes boardIn{ to{ opacity:1; transform: scale(1); } }
 
   .game-content{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .game-main, .game-side{
     width:100%;
     display:flex;
     flex-direction:column;
@@ -672,6 +678,73 @@
     transform: translateY(14px);
     animation: riseIn .5s cubic-bezier(.22,1,.36,1) .38s forwards;
   }
+  /* ---------- Modo paisagem ---------- */
+  @media (min-aspect-ratio: 6/5){
+    .screen{ padding: 14px 22px; justify-content:center; }
+
+    .game-content{
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      height: 100%;
+      width: 100%;
+    }
+    .game-main{
+      width: var(--board-px, 320px);
+      flex: 0 0 auto;
+      justify-content: center;
+    }
+    .board-wrap{
+      width: var(--board-px, 320px);
+      height: var(--board-px, 320px);
+      flex: 0 0 auto;
+    }
+    .board-wrap .board{ width: 100%; height: 100%; aspect-ratio: auto; }
+    .game-side{
+      flex: 1 1 auto;
+      width: auto;
+      max-width: 400px;
+      min-width: 240px;
+      justify-content: center;
+    }
+    .icon-actions{ margin-top: 0; }
+    .game-main .status-row{ margin-bottom: 6px; }
+    .game-main .status-row + .status-row{ margin-top: -6px !important; }
+    .game-main .timer{ font-size: 22px; }
+    .pad button{ aspect-ratio: 1.4/1; }
+    .pad{ margin-top: 14px; }
+    .footer-actions{ margin-top: 14px; }
+
+    /* menu em paisagem: dificuldades em grade 2x2 */
+    #menuScreen .menu-top{ margin-top: 0; }
+    #menuScreen h1{ font-size: 26px; margin: 4px 0 2px; }
+    #menuScreen .diff-list{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    #menuScreen .diff-card{ padding: 12px 16px; }
+    #menuScreen .diff-card.center{ padding: 16px 18px; }
+    #menuScreen .diff-card.center .diff-name{ font-size: 20px; }
+    .theme-dots{ margin-top: 6px; }
+    .theme-current-name{ margin-top: 8px; }
+    .lang-switch{ margin-top: 12px; }
+    #menuScreen .play-btn{ margin-top: 14px; }
+
+    /* vitória em paisagem */
+    #winScreen .win-hero{ margin-top: 0; }
+    #winScreen .win-check{ width: 46px; height: 46px; font-size: 20px; margin-bottom: 8px; }
+    #winScreen .ranking-title{ margin-top: 14px; margin-bottom: 8px; }
+    #winScreen .ranking-list{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    #winScreen .ranking-row{ padding: 10px 14px; }
+    #winScreen .play-btn{ margin-top: 14px; }
+  }
 </style>
 </head>
 <body>
@@ -740,6 +813,7 @@
   <!-- GAME SCREEN -->
   <div class="screen" id="gameScreen">
     <div class="game-content" id="gameContent">
+    <div class="game-main">
     <div class="status-row">
       <button class="back-btn" id="backBtn">← menu</button>
       <div class="best" id="best"><span class="best-label" id="bestLabel">Recorde ·</span> <span class="val">—</span></div>
@@ -753,7 +827,9 @@
       <div class="board" id="board"></div>
       <div class="diff-intro" id="diffIntro"><span class="badge" id="diffIntroText"></span></div>
     </div>
+    </div>
 
+    <div class="game-side">
     <div class="icon-actions">
       <button id="undoBtn" title="Desfazer">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
@@ -782,6 +858,7 @@
     <div class="footer-actions">
       <button id="newGameBtn">Novo jogo</button>
       <button id="restartBtn">Reiniciar</button>
+    </div>
     </div>
     </div>
   </div>
@@ -1757,6 +1834,49 @@ langButtons.forEach(btn=>{
 })();
 
 // garante que a barra de status pegue o tema mesmo se o Capacitor carregar depois
+// ---------- Escala proporcional (telefone pequeno → tablet) ----------
+const appEl = document.querySelector('.app');
+const DESIGN = 430;      // largura de referência do layout (retrato)
+const MAX_SCALE = 1.85;  // limite para tablets grandes
+const MIN_SCALE = 0.62;
+const MAX_LOGICAL_W = 560; // evita esticar demais em telas muito largas
+
+function fitApp(){
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  // mesmo critério do CSS (@media min-aspect-ratio: 6/5)
+  const wide = vw / vh >= 1.2;
+
+  // em retrato a escala segue a largura; em paisagem segue a altura
+  const base = wide ? vh : vw;
+  let s = base / DESIGN;
+  s = Math.max(MIN_SCALE, Math.min(s, MAX_SCALE));
+
+  let logicalW = vw / s;
+  const logicalH = vh / s;
+  if(!wide) logicalW = Math.min(logicalW, MAX_LOGICAL_W);
+
+  appEl.style.width = logicalW + 'px';
+  appEl.style.height = logicalH + 'px';
+  appEl.style.transform = 'scale(' + s + ')';
+  appEl.style.left = Math.max(0, (vw - logicalW * s) / 2) + 'px';
+
+  // em paisagem o tabuleiro é dimensionado explicitamente (evita colapso do layout)
+  if(wide){
+    const PAD_V = 28, PAD_H = 44, GAP = 22, STATUS_H = 56, SIDE_MIN = 230;
+    const availH = logicalH - PAD_V - STATUS_H;
+    const availW = logicalW - PAD_H - GAP - SIDE_MIN;
+    const size = Math.max(170, Math.min(availH, availW));
+    document.documentElement.style.setProperty('--board-px', Math.floor(size) + 'px');
+  } else {
+    document.documentElement.style.removeProperty('--board-px');
+  }
+}
+
+fitApp();
+window.addEventListener('resize', fitApp);
+window.addEventListener('orientationchange', ()=> setTimeout(fitApp, 120));
+
 window.addEventListener('load', ()=> syncSystemBars(THEME_ORDER[themeIndex], false));
 document.addEventListener('resume', ()=> syncSystemBars(THEME_ORDER[themeIndex], false));
 </script>
