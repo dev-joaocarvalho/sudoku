@@ -1525,40 +1525,97 @@ const THEME_STATUS = {
   ultraapricot:       { bg:'#FFD6A5', light:true  }
 };
 
-function syncSystemBars(theme){
-  const info = THEME_STATUS[theme] || THEME_STATUS[''];
-  // navegador / PWA
+function hexToRgb(hex){
+  const h = hex.replace('#','');
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');
+}
+// curva "ease" do CSS = cubic-bezier(.25,.1,.25,1)
+function easeCSS(t){
+  const cx = 3*0.25, bx = 3*(0.25-0.25)-cx, ax = 1-cx-bx;
+  const cy = 3*0.1,  by = 3*(1-0.1)-cy,     ay = 1-cy-by;
+  let x = t;
+  for(let i=0;i<5;i++){
+    const fx = ((ax*x + bx)*x + cx)*x - t;
+    const d = (3*ax*x + 2*bx)*x + cx;
+    if(Math.abs(d) < 1e-6) break;
+    x -= fx/d;
+  }
+  return ((ay*x + by)*x + cy)*x;
+}
+
+let statusAnimId = null;
+let currentStatusColor = '#000000';
+
+function setStatusBar(color, light){
   let meta = document.querySelector('meta[name="theme-color"]');
   if(!meta){
     meta = document.createElement('meta');
     meta.name = 'theme-color';
     document.head.appendChild(meta);
   }
-  meta.content = info.bg;
-  // app Android (Capacitor)
+  meta.content = color;
   try{
     const sb = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.StatusBar;
     if(sb){
       sb.setOverlaysWebView({ overlay: false });
-      sb.setBackgroundColor({ color: info.bg });
-      // 'LIGHT' = texto escuro (fundo claro) | 'DARK' = texto claro (fundo escuro)
-      sb.setStyle({ style: info.light ? 'LIGHT' : 'DARK' });
+      sb.setBackgroundColor({ color });
+      if(light !== undefined) sb.setStyle({ style: light ? 'LIGHT' : 'DARK' });
     }
   }catch(e){}
 }
 
-function applyTheme(i){
+function syncSystemBars(theme, animate=true){
+  const info = THEME_STATUS[theme] || THEME_STATUS[''];
+  if(statusAnimId){ cancelAnimationFrame(statusAnimId); statusAnimId = null; }
+
+  if(!animate){
+    currentStatusColor = info.bg;
+    setStatusBar(info.bg, info.light);
+    return;
+  }
+
+  const from = hexToRgb(currentStatusColor);
+  const to = hexToRgb(info.bg);
+  const DURATION = 450; // mesma duração da transição do CSS
+  const start = performance.now();
+  let styleSwitched = false;
+
+  function frame(now){
+    const t = Math.min(1, (now - start) / DURATION);
+    const e = easeCSS(t);
+    const c = rgbToHex(
+      from[0] + (to[0]-from[0])*e,
+      from[1] + (to[1]-from[1])*e,
+      from[2] + (to[2]-from[2])*e
+    );
+    // troca os ícones do sistema no meio do caminho
+    setStatusBar(c, (!styleSwitched && e >= 0.5) ? (styleSwitched = true, info.light) : undefined);
+    if(t < 1){
+      statusAnimId = requestAnimationFrame(frame);
+    } else {
+      currentStatusColor = info.bg;
+      setStatusBar(info.bg, info.light);
+      statusAnimId = null;
+    }
+  }
+  statusAnimId = requestAnimationFrame(frame);
+}
+
+function applyTheme(i, animate=true){
   const theme = THEME_ORDER[i];
   if(theme) document.body.setAttribute('data-theme', theme);
   else document.body.removeAttribute('data-theme');
-  syncSystemBars(theme);
+  syncSystemBars(theme, animate);
   try{ localStorage.setItem('sudoku-theme', theme); }catch(e){}
 }
 
 function selectTheme(i, animateName=true){
   themeIndex = Math.max(0, Math.min(THEME_ORDER.length-1, i));
   dotEls.forEach((d,idx)=> d.classList.toggle('center', idx===themeIndex));
-  applyTheme(themeIndex);
+  applyTheme(themeIndex, animateName);
   const name = dotEls[themeIndex].dataset.name;
   if(animateName) scrambleTo(themeCurrentNameEl, name);
   else themeCurrentNameEl.textContent = name;
@@ -1629,8 +1686,8 @@ langButtons.forEach(btn=>{
 })();
 
 // garante que a barra de status pegue o tema mesmo se o Capacitor carregar depois
-window.addEventListener('load', ()=> syncSystemBars(THEME_ORDER[themeIndex]));
-document.addEventListener('resume', ()=> syncSystemBars(THEME_ORDER[themeIndex]));
+window.addEventListener('load', ()=> syncSystemBars(THEME_ORDER[themeIndex], false));
+document.addEventListener('resume', ()=> syncSystemBars(THEME_ORDER[themeIndex], false));
 </script>
 </body>
 </html>
