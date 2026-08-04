@@ -80,14 +80,18 @@
     background: var(--bg);
     color: var(--text-hi);
     font-family: 'Space Grotesk', sans-serif;
-    overflow-x:hidden;
+    overflow:hidden;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
     user-select:none;
   }
   .app{
     max-width: 440px;
     margin: 0 auto;
-    min-height: 100vh;
+    height: 100%;
     position: relative;
+    overflow: hidden;
   }
   .screen{
     position:absolute;
@@ -97,6 +101,8 @@
     align-items:center;
     padding: 28px 20px 40px;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     opacity:0;
     transform: translateY(14px) scale(0.98);
     pointer-events:none;
@@ -106,7 +112,6 @@
     opacity:1;
     transform: translateY(0) scale(1);
     pointer-events:auto;
-    position:relative;
   }
 
   /* ---------- Theme switcher (color dots) ---------- */
@@ -1112,91 +1117,133 @@ function restart(){
   saveProgress();
 }
 
-function renderBoard(justEntered){
+let boardBuilt = false;
+
+function handleCellClick(row, col){
+  const currentVal = board[row][col];
+  const isGiven = given[row][col]!==0;
+
+  if(notesMode){
+    if(currentVal===0){
+      selectedCell = {row,col};
+      renderBoard(false);
+    } else {
+      selectedCell = null;
+      viewNumber(currentVal);
+    }
+    return;
+  }
+
+  if(armed && selectedNumber === 0){
+    if(!isGiven && currentVal!==0) placeNumber(row,col,0);
+    return;
+  }
+  if(currentVal !== 0){
+    selectedCell = null;
+    viewNumber(currentVal);
+    return;
+  }
+  if(armed && selectedNumber!==null){
+    placeNumber(row,col,selectedNumber);
+    selectedCell = null;
+  } else {
+    selectedCell = {row,col};
+    renderBoard(false);
+  }
+}
+
+// cria as 81 células UMA vez; depois só atualizamos (evita piscada)
+function buildBoard(){
   boardEl.innerHTML = '';
-  let highlightCount = 0;
-  const animateHL = selectedNumber !== lastHighlightNum;
   for(let row=0; row<9; row++){
     for(let col=0; col<9; col++){
-      const val = board[row][col];
       const div = document.createElement('div');
       div.className = 'cell';
-      if(justEntered){
-        div.classList.add('cell-in');
-        div.style.animationDelay = ((row+col)*16)+'ms';
-      }
-      if(given[row][col]!==0) div.classList.add('given');
       if(row%3===0) div.classList.add('block-top');
       if(row%3===2) div.classList.add('block-bottom');
+      const span = document.createElement('span');
+      span.className = 'num';
+      div.appendChild(span);
+      const grid = document.createElement('div');
+      grid.className = 'notes-grid';
+      for(let d=1; d<=9; d++) grid.appendChild(document.createElement('span'));
+      div.appendChild(grid);
+      div.addEventListener('click', ()=> handleCellClick(row,col));
+      boardEl.appendChild(div);
+    }
+  }
+  boardBuilt = true;
+}
+
+function renderBoard(justEntered){
+  if(!boardBuilt) buildBoard();
+  let highlightCount = 0;
+  const animateHL = selectedNumber !== lastHighlightNum;
+
+  for(let row=0; row<9; row++){
+    for(let col=0; col<9; col++){
+      const idx = row*9+col;
+      const div = boardEl.children[idx];
+      const val = board[row][col];
+      const span = div.querySelector('.num');
+      const notesGrid = div.querySelector('.notes-grid');
+
+      // conteúdo
       if(val!==0){
-        const span = document.createElement('span');
-        span.className = 'num';
-        span.textContent = val;
-        div.appendChild(span);
-        if(!isSafe(replaceZero(board,row,col), row, col, val)){
-          div.classList.add('conflict');
-        }
-      } else if(notes[row][col].size>0){
-        const grid = document.createElement('div');
-        grid.className = 'notes-grid';
-        for(let d=1; d<=9; d++){
-          const s = document.createElement('span');
-          s.textContent = notes[row][col].has(d) ? d : '';
-          grid.appendChild(s);
-        }
-        div.appendChild(grid);
-      }
-      if(selectedNumber && val===selectedNumber){
-        div.classList.add('same-value');
-        if(animateHL){
-          div.style.animationDelay = (highlightCount*45)+'ms';
-          const numSpan = div.querySelector('.num');
-          if(numSpan) numSpan.style.animationDelay = (highlightCount*45)+'ms';
-          highlightCount++;
+        if(span.textContent !== String(val)) span.textContent = val;
+        span.style.display = '';
+        notesGrid.style.display = 'none';
+      } else {
+        span.textContent = '';
+        span.style.display = 'none';
+        if(notes[row][col].size>0){
+          notesGrid.style.display = '';
+          for(let d=1; d<=9; d++){
+            const t = notes[row][col].has(d) ? String(d) : '';
+            if(notesGrid.children[d-1].textContent !== t) notesGrid.children[d-1].textContent = t;
+          }
         } else {
+          notesGrid.style.display = 'none';
+        }
+      }
+
+      // estados (sem recriar o elemento)
+      div.classList.toggle('given', given[row][col]!==0);
+      div.classList.toggle('conflict', val!==0 && !isSafe(replaceZero(board,row,col), row, col, val));
+
+      const isSame = !!(selectedNumber && val===selectedNumber);
+      const wasSame = div.classList.contains('same-value');
+      div.classList.toggle('same-value', isSame);
+      if(isSame){
+        if(animateHL && !wasSame){
+          div.classList.remove('sv-static');
+          div.style.animationDelay = (highlightCount*45)+'ms';
+          span.style.animationDelay = (highlightCount*45)+'ms';
+          highlightCount++;
+        } else if(!animateHL){
           div.classList.add('sv-static');
         }
-      }
-      if(selectedCell && selectedCell.row===row && selectedCell.col===col){
-        div.classList.add('selected');
-      } else if(selectedCell && (row===selectedCell.row || col===selectedCell.col ||
-              (Math.floor(row/3)===Math.floor(selectedCell.row/3) && Math.floor(col/3)===Math.floor(selectedCell.col/3)))){
-        div.classList.add('peer');
+      } else {
+        div.classList.remove('sv-static');
+        div.style.animationDelay = '';
+        span.style.animationDelay = '';
       }
 
-      div.addEventListener('click', ()=>{
-        const currentVal = board[row][col];
-        const isGiven = given[row][col]!==0;
+      const isSel = !!(selectedCell && selectedCell.row===row && selectedCell.col===col);
+      const isPeer = !isSel && !!(selectedCell && (row===selectedCell.row || col===selectedCell.col ||
+              (Math.floor(row/3)===Math.floor(selectedCell.row/3) && Math.floor(col/3)===Math.floor(selectedCell.col/3))));
+      div.classList.toggle('selected', isSel);
+      div.classList.toggle('peer', isPeer);
 
-        if(notesMode){
-          if(currentVal===0){
-            selectedCell = {row,col};
-            renderBoard(false);
-          } else {
-            selectedCell = null;
-            viewNumber(currentVal);
-          }
-          return;
-        }
-
-        if(armed && selectedNumber === 0){
-          if(!isGiven && currentVal!==0) placeNumber(row,col,0);
-          return;
-        }
-        if(currentVal !== 0){
-          selectedCell = null;
-          viewNumber(currentVal);
-          return;
-        }
-        if(armed && selectedNumber!==null){
-          placeNumber(row,col,selectedNumber);
-          selectedCell = null;
-        } else {
-          selectedCell = {row,col};
-          renderBoard(false);
-        }
-      });
-      boardEl.appendChild(div);
+      // animação de entrada só ao abrir o jogo
+      if(justEntered){
+        div.classList.remove('cell-in','win-wave');
+        void div.offsetWidth;
+        div.style.animationDelay = ((row+col)*16)+'ms';
+        div.classList.add('cell-in');
+      } else {
+        div.classList.remove('cell-in');
+      }
     }
   }
   lastHighlightNum = selectedNumber;
@@ -1229,8 +1276,13 @@ function placeNumber(row, col, n){
     notes[row][col] = new Set();
     buzz(10);
     if(span){
+      span.classList.remove('out');
+      void span.offsetWidth;
       span.classList.add('out');
-      setTimeout(()=>{ renderBoard(false); updatePadActive(); saveProgress(); }, 140);
+      setTimeout(()=>{
+        span.classList.remove('out');
+        renderBoard(false); updatePadActive(); saveProgress();
+      }, 140);
     } else {
       renderBoard(false); updatePadActive(); saveProgress();
     }
@@ -1257,7 +1309,11 @@ function placeNumber(row, col, n){
     const cellIdx = row*9+col;
     const cellEl = boardEl.children[cellIdx];
     const span = cellEl.querySelector('.num');
-    if(span) span.classList.add('pop');
+    if(span){
+      span.classList.remove('pop');
+      void span.offsetWidth;
+      span.classList.add('pop');
+    }
     const rip = document.createElement('span');
     rip.className = 'ripple';
     cellEl.appendChild(rip);
